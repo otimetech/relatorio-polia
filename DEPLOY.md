@@ -16,7 +16,20 @@ npm run preview
 
 ### Variáveis de Ambiente
 
-Nenhuma variável de ambiente obrigatória para o build básico.
+**Obrigatória:**
+
+- `VITE_API_URL` - URL base da API para buscar dados dos relatórios
+  - Exemplo: `https://api.jundpred.com.br/api`
+  - Padrão (se não configurada): `/api`
+
+**Como configurar no Coolify:**
+
+1. Acesse seu projeto no Coolify
+2. Vá em **Environment Variables**
+3. Adicione a variável:
+   - Nome: `VITE_API_URL`
+   - Valor: URL completa da sua API
+4. Salve e faça o redeploy
 
 ### Configurações de Build
 
