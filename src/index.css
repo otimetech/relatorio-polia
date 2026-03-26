@@ -328,6 +328,210 @@
     @apply text-xs text-center text-muted-foreground py-2 bg-secondary/30;
   }
 
+  .alignment-card {
+    @apply border border-gray-300 bg-white;
+  }
+
+  .alignment-card-header {
+    color: #2f5ca8;
+    background: #e6e6e6;
+    font-family: Georgia, "Times New Roman", serif;
+    @apply px-3 py-1 text-[14px] leading-tight;
+    min-height: 42px;
+  }
+
+  .alignment-card-body {
+    @apply flex items-center justify-between px-3 py-2 gap-2;
+  }
+
+  .alignment-diagram-box {
+    width: 110px;
+    height: 145px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .alignment-grid-frame {
+    position: relative;
+    width: 110px;
+    height: 145px;
+    border: 1px solid #111;
+    background: linear-gradient(to right, transparent 0 6px, #111 6px 10px, transparent 10px calc(100% - 10px), #111 calc(100% - 10px) calc(100% - 6px), transparent calc(100% - 6px));
+  }
+
+  .alignment-grid-center {
+    position: absolute;
+    top: -16px;
+    bottom: -16px;
+    left: 50%;
+    border-left: 1px dashed #555;
+  }
+
+  .alignment-grid-horizontal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #888;
+  }
+
+  .alignment-grid-horizontal-top {
+    top: 28px;
+  }
+
+  .alignment-grid-horizontal-middle {
+    top: 56%;
+  }
+
+  .alignment-grid-horizontal-bottom {
+    bottom: 28px;
+  }
+
+  .alignment-line {
+    position: absolute;
+    background: #ff1f1f;
+  }
+
+  .alignment-line-vertical-angle {
+    width: 4px;
+    height: 150px;
+    left: 54%;
+    top: -4px;
+    transform: translateX(-50%) rotate(31deg);
+    transform-origin: center;
+  }
+
+  .alignment-line-horizontal-angle {
+    width: 4px;
+    height: 44px;
+    left: 66%;
+    top: -1px;
+    box-shadow: 0 43px 0 0 #ff1f1f, -28px 28px 0 0 #ff1f1f;
+  }
+
+  .alignment-line-parallel {
+    width: 4px;
+    height: 144px;
+    left: 26%;
+    top: 0;
+  }
+
+  .alignment-line-combined {
+    width: 4px;
+    height: 34px;
+    left: 57%;
+    top: -1px;
+    box-shadow: -26px 30px 0 0 #ff1f1f, -38px 86px 0 0 #ff1f1f, -22px 112px 0 0 #ff1f1f;
+    transform: rotate(56deg);
+    transform-origin: top center;
+  }
+
+  .alignment-pulley-view {
+    position: relative;
+    width: 88px;
+    height: 152px;
+  }
+
+  .alignment-pulley-belt {
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 50%;
+    width: 2px;
+    background: #777;
+  }
+
+  .alignment-pulley-shaft {
+    position: absolute;
+    right: 0;
+    width: 28px;
+    height: 8px;
+    background: #d0d0d0;
+    border: 1px solid #666;
+  }
+
+  .alignment-pulley-shaft-top {
+    top: 10px;
+  }
+
+  .alignment-pulley-shaft-bottom {
+    bottom: 10px;
+  }
+
+  .alignment-pulley,
+  .alignment-pulley-base {
+    position: absolute;
+    left: 36px;
+    width: 10px;
+    height: 44px;
+    border-left: 2px solid #222;
+    border-right: 2px solid #222;
+    background: #d9d9d9;
+  }
+
+  .alignment-pulley {
+    top: 4px;
+  }
+
+  .alignment-pulley-base {
+    bottom: 4px;
+  }
+
+  .alignment-pulley-vertical-angle,
+  .alignment-pulley-parallel {
+    transform: none;
+  }
+
+  .alignment-pulley-horizontal-angle {
+    transform: rotate(12deg);
+    transform-origin: center;
+  }
+
+  .alignment-pulley-combined {
+    transform: rotate(18deg);
+    transform-origin: center;
+  }
+
+  .alignment-check {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #000;
+    @apply text-center text-[22px] leading-none pb-1;
+  }
+
+  .alignment-check-active {
+    font-weight: 700;
+  }
+
+  .alignment-check-mark-active {
+    color: #c1121f;
+  }
+
+  .alignment-check-mark-inactive {
+    color: #000;
+  }
+
+  .alignment-values-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid #111;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+  }
+
+  .alignment-value-box {
+    @apply px-3 py-1.5;
+    border-right: 1px solid #111;
+  }
+
+  .alignment-value-box:last-child {
+    border-right: 0;
+  }
+
+  .alignment-value-label {
+    font-weight: 500;
+    margin-right: 6px;
+  }
+
   /* Vibration Report Table - com cor azul */
   .vibration-report-table {
     @apply w-full border-collapse;

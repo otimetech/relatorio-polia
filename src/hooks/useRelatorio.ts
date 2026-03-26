@@ -6,6 +6,49 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 export type RelatorioResponse = VibracaoRelatorioResponse | UltrasomRelatorioResponse;
 
 export const fetchRelatorio = async (idRelatorio: string): Promise<RelatorioResponse> => {
+  // Endpoint público dedicado para relatório de alinhamento de polia
+  const poliaUrl = `${API_BASE_URL}/get-relatorio-polia?id_relatorio=${idRelatorio}`;
+  const poliaResponse = await fetch(poliaUrl);
+
+  if (poliaResponse.ok) {
+    const contentType = poliaResponse.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const poliaData = await poliaResponse.json();
+
+      // Normaliza payload de polia para o formato que a página já renderiza
+      if (poliaData && poliaData.id && Array.isArray(poliaData.alinhamentos)) {
+        const normalizedUltrasom: UltrasomRelatorioResponse = {
+          relatorio: {
+            ...poliaData,
+            num_revisao: poliaData.num_revisao,
+            cliente: poliaData.cliente,
+            executor: poliaData.usuario,
+            aprovador: poliaData.aprovador,
+            ultrassom: poliaData.alinhamentos.map((item: any) => ({
+              id: item.id,
+              foto_painel: item.foto_a || item.foto_epto || null,
+              foto_camera: item.foto_c || item.foto_b || item.foto_d || null,
+              setor: item.equipamento || "-",
+              num_vazamento: String(item.canal_polia ?? "-"),
+              localizacao: item.distancia_cabecotes || "-",
+              componente: item.qtde_correia != null ? `Correias: ${item.qtde_correia}` : "-",
+              valor_medido: item.valor_desalinhamento || "-",
+              diagnostico: item.comentario || "-",
+              recomendacao: item.consideracao_final || "-",
+              status: item.condicao_final || poliaData.status || "Não iniciado",
+            })),
+          },
+        };
+
+        return normalizedUltrasom;
+      }
+    }
+  }
+
+  if (poliaResponse.status >= 400) {
+    throw new Error(`Erro ao buscar relatório de polia: ${poliaResponse.status}`);
+  }
+
   // Tentar buscar dados de Ultrassom primeiro
   try {
     const ultrasomUrl = `${API_BASE_URL}/get-relatorio-ultrassom?id_relatorio=${idRelatorio}`;

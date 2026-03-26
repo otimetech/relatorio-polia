@@ -1,27 +1,3 @@
-export interface Vibracao {
-  id: number;
-  created_at: string;
-  id_cliente: number;
-  id_relatorio: number;
-  localizacao: string;
-  setor: string;
-  status: "Normal" | "Alerta" | "Crítico" | string;
-  observacao: string;
-  velocidade_global: string;
-  velocidade_admissivel: string;
-  foto_equipamento: string | null;
-  foto_espectro: string | null;
-  componente: string;
-  descricao_problema: string;
-  recomendacao: string;
-  tag: string;
-  id_user: number;
-  rpm: string;
-  potencia: string;
-  frequencia_fundamental: string;
-  ponto_medicao: string;
-}
-
 export interface VibracaoEquipamento {
   id: number;
   area?: string | null;
@@ -144,28 +120,3 @@ export interface UltrasomRelatorioResponse {
   relatorio: UltrasomRelatorio;
 }
 
-export interface SeverityLevel {
-  range: string;
-  classification: string;
-  color: string;
-  bgColor: string;
-}
-
-export const SEVERITY_LEVELS: SeverityLevel[] = [
-  { range: "0,00 a 0,70", classification: "BOM", color: "text-green-700", bgColor: "bg-green-100" },
-  { range: "0,71 a 1,80", classification: "ACEITÁVEL", color: "text-green-600", bgColor: "bg-green-50" },
-  { range: "1,81 a 4,50", classification: "ALERTA", color: "text-yellow-700", bgColor: "bg-yellow-100" },
-  { range: "4,51 a 7,10", classification: "ALTO", color: "text-orange-700", bgColor: "bg-orange-100" },
-  { range: "7,11 a 11,20", classification: "CRÍTICO", color: "text-red-600", bgColor: "bg-red-100" },
-  { range: "≥ 11,21", classification: "MUITO CRÍTICO", color: "text-red-800", bgColor: "bg-red-200" },
-];
-
-export const mapVibracaoStatusToStatusType = (status: string): "normal" | "alert" | "critical" | "maintenance" | "off" => {
-  const statusLower = status.toLowerCase();
-  if (statusLower === "normal" || statusLower === "bom" || statusLower === "aceitável" || statusLower === "aceitavel" || statusLower === "n") return "normal";
-  if (statusLower === "alerta" || statusLower === "a1") return "alert";
-  if (statusLower === "crítico" || statusLower === "critico" || statusLower === "alto" || statusLower === "muito crítico" || statusLower === "a2") return "critical";
-  if (statusLower === "manutenção" || statusLower === "manutencao") return "maintenance";
-  if (statusLower === "desligado") return "off";
-  return "normal";
-};
