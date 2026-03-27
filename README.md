@@ -68,7 +68,8 @@ Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and 
 
 This app expects the API base URL to be provided at build time for production.
 
-- `VITE_API_URL`: Base URL for the vibration report API (example: `https://ayfkjjdgrbymmlkuzbig.supabase.co/functions/v1`)
+- `VITE_API_URL`: Base URL for the report API (example: `https://ayfkjjdgrbymmlkuzbig.supabase.co/functions/v1`)
+- If `VITE_API_URL` is not defined, the app uses `/api` in local development and the public Supabase Functions URL in production builds.
 
 ## Can I connect a custom domain to my Lovable project?
 

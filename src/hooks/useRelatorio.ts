@@ -1,14 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
 import { VibracaoRelatorioResponse, UltrasomRelatorioResponse } from "@/types/vibracao";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const SUPABASE_FUNCTIONS_BASE_URL = "https://ayfkjjdgrbymmlkuzbig.supabase.co/functions/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || (import.meta.env.DEV ? "/api" : SUPABASE_FUNCTIONS_BASE_URL);
 
 export type RelatorioResponse = VibracaoRelatorioResponse | UltrasomRelatorioResponse;
+
+const readApiError = async (response: Response) => {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    const data = await response.json().catch(() => null);
+    if (data && typeof data === "object") {
+      const message = data.error || data.message;
+      if (typeof message === "string" && message.trim()) {
+        return message;
+      }
+    }
+  }
+
+  const bodyText = await response.text().catch(() => "");
+  if (bodyText.trim().startsWith("<!doctype html>") || bodyText.trim().startsWith("<html")) {
+    return "A requisicao da API retornou HTML em vez de JSON. Verifique VITE_API_URL ou o proxy /api deste ambiente.";
+  }
+
+  return bodyText.slice(0, 160) || `HTTP ${response.status}`;
+};
 
 export const fetchRelatorio = async (idRelatorio: string): Promise<RelatorioResponse> => {
   // Endpoint público dedicado para relatório de alinhamento de polia
   const poliaUrl = `${API_BASE_URL}/get-relatorio-polia?id_relatorio=${idRelatorio}`;
   const poliaResponse = await fetch(poliaUrl);
+  let lastErrorMessage: string | null = null;
 
   if (poliaResponse.ok) {
     const contentType = poliaResponse.headers.get("content-type") || "";
@@ -43,10 +66,8 @@ export const fetchRelatorio = async (idRelatorio: string): Promise<RelatorioResp
         return normalizedUltrasom;
       }
     }
-  }
-
-  if (poliaResponse.status >= 400) {
-    throw new Error(`Erro ao buscar relatório de polia: ${poliaResponse.status}`);
+  } else {
+    lastErrorMessage = await readApiError(poliaResponse);
   }
 
   // Tentar buscar dados de Ultrassom primeiro
@@ -63,6 +84,8 @@ export const fetchRelatorio = async (idRelatorio: string): Promise<RelatorioResp
           return data;
         }
       }
+    } else {
+      lastErrorMessage = await readApiError(response);
     }
   } catch (error) {
     console.warn("Erro ao buscar Ultrassom, tentando Vibracao...", error);
@@ -73,12 +96,16 @@ export const fetchRelatorio = async (idRelatorio: string): Promise<RelatorioResp
   const response = await fetch(vibracaoUrl);
   
   if (!response.ok) {
-    throw new Error(`Erro ao buscar relatório: ${response.status}`);
+    const message = await readApiError(response);
+    throw new Error(`Erro ao buscar relatório: ${message || lastErrorMessage || response.status}`);
   }
 
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
     const bodyText = await response.text();
+    if (bodyText.trim().startsWith("<!doctype html>") || bodyText.trim().startsWith("<html")) {
+      throw new Error("A requisicao da API retornou HTML em vez de JSON. Verifique VITE_API_URL ou o proxy /api deste ambiente.");
+    }
     throw new Error(`Resposta inesperada da API: ${bodyText.slice(0, 120)}`);
   }
 

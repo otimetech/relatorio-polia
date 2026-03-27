@@ -19,8 +19,8 @@ npm run preview
 **Obrigatória:**
 
 - `VITE_API_URL` - URL base da API para buscar dados dos relatórios
-  - Exemplo: `https://api.jundpred.com.br/api`
-  - Padrão (se não configurada): `/api`
+  - Exemplo: `https://ayfkjjdgrbymmlkuzbig.supabase.co/functions/v1`
+  - Padrão (se não configurada): `/api` em desenvolvimento e a URL pública do Supabase em produção
 
 **Como configurar no Coolify:**
 
