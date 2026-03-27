@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { VibracaoRelatorioResponse, UltrasomRelatorioResponse } from "@/types/vibracao";
 
 const SUPABASE_FUNCTIONS_BASE_URL = "https://ayfkjjdgrbymmlkuzbig.supabase.co/functions/v1";
-const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || (import.meta.env.DEV ? "/api" : SUPABASE_FUNCTIONS_BASE_URL);
+const configuredApiBaseUrl = import.meta.env.VITE_API_URL?.trim();
+const API_BASE_URL = configuredApiBaseUrl
+  ? configuredApiBaseUrl.replace(/\/+$/, "")
+  : "/api";
 
 export type RelatorioResponse = VibracaoRelatorioResponse | UltrasomRelatorioResponse;
 
@@ -30,97 +33,67 @@ const readApiError = async (response: Response) => {
 export const fetchRelatorio = async (idRelatorio: string): Promise<RelatorioResponse> => {
   // Endpoint público dedicado para relatório de alinhamento de polia
   const poliaUrl = `${API_BASE_URL}/get-relatorio-polia?id_relatorio=${idRelatorio}`;
-  let lastErrorMessage: string | null = null;
+  let poliaResponse: Response;
 
   try {
-    const poliaResponse = await fetch(poliaUrl);
-
-    if (poliaResponse.ok) {
-      const contentType = poliaResponse.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        const poliaData = await poliaResponse.json();
-
-        // Normaliza payload de polia para o formato que a página já renderiza
-        if (poliaData && poliaData.id && Array.isArray(poliaData.alinhamentos)) {
-          const normalizedUltrasom: UltrasomRelatorioResponse = {
-            relatorio: {
-              ...poliaData,
-              num_revisao: poliaData.num_revisao,
-              cliente: poliaData.cliente,
-              executor: poliaData.usuario,
-              aprovador: poliaData.aprovador,
-              ultrassom: poliaData.alinhamentos.map((item: any) => ({
-                id: item.id,
-                foto_painel: item.foto_a || item.foto_epto || null,
-                foto_camera: item.foto_c || item.foto_b || item.foto_d || null,
-                setor: item.equipamento || "-",
-                num_vazamento: String(item.canal_polia ?? "-"),
-                localizacao: item.distancia_cabecotes || "-",
-                componente: item.qtde_correia != null ? `Correias: ${item.qtde_correia}` : "-",
-                valor_medido: item.valor_desalinhamento || "-",
-                diagnostico: item.comentario || "-",
-                recomendacao: item.consideracao_final || "-",
-                status: item.condicao_final || poliaData.status || "Não iniciado",
-              })),
-            },
-          };
-
-          return normalizedUltrasom;
-        }
-      }
-    } else {
-      lastErrorMessage = await readApiError(poliaResponse);
-    }
+    poliaResponse = await fetch(poliaUrl);
   } catch (error) {
-    console.warn("Erro ao buscar relatorio de polia, tentando fallback...", error);
-    lastErrorMessage = error instanceof Error ? error.message : "Falha ao acessar endpoint de polia";
+    const isDirectSupabaseCall = API_BASE_URL === SUPABASE_FUNCTIONS_BASE_URL;
+    const corsHint = isDirectSupabaseCall
+      ? " A chamada foi feita direto para o Supabase; se o navegador bloquear por CORS, publique o app com proxy same-origin em /api ou libere o dominio no endpoint."
+      : "";
+
+    throw new Error(
+      `Erro ao buscar relatório de polia: ${error instanceof Error ? error.message : "falha de rede"}.${corsHint}`,
+    );
   }
 
-  // Tentar buscar dados de Ultrassom primeiro
-  try {
-    const ultrasomUrl = `${API_BASE_URL}/get-relatorio-ultrassom?id_relatorio=${idRelatorio}`;
-    const response = await fetch(ultrasomUrl);
-    
-    if (response.ok) {
-      const contentType = response.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        const data: UltrasomRelatorioResponse = await response.json();
-        // Se a resposta tem a estrutura de ultrassom, retorna
-        if (data.relatorio && data.relatorio.ultrassom) {
-          return data;
-        }
-      }
-    } else {
-      lastErrorMessage = await readApiError(response);
-    }
-  } catch (error) {
-    console.warn("Erro ao buscar Ultrassom, tentando Vibracao...", error);
+  if (!poliaResponse.ok) {
+    const message = await readApiError(poliaResponse);
+    throw new Error(`Erro ao buscar relatório de polia: ${message || poliaResponse.status}`);
   }
 
-  // Fallback para Vibracao
-  const vibracaoUrl = `${API_BASE_URL}/get-vibracao?id_relatorio=${idRelatorio}`;
-  const response = await fetch(vibracaoUrl);
-  
-  if (!response.ok) {
-    const message = await readApiError(response);
-    throw new Error(`Erro ao buscar relatório: ${message || lastErrorMessage || response.status}`);
-  }
-
-  const contentType = response.headers.get("content-type") || "";
+  const contentType = poliaResponse.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
-    const bodyText = await response.text();
+    const bodyText = await poliaResponse.text();
     if (bodyText.trim().startsWith("<!doctype html>") || bodyText.trim().startsWith("<html")) {
       throw new Error("A requisicao da API retornou HTML em vez de JSON. Verifique VITE_API_URL ou o proxy /api deste ambiente.");
     }
     throw new Error(`Resposta inesperada da API: ${bodyText.slice(0, 120)}`);
   }
 
-  const data: VibracaoRelatorioResponse = await response.json();
-  if (!data.success) {
-    throw new Error("Erro ao buscar relatório: resposta inválida");
+  const poliaData = await poliaResponse.json();
+
+  if (!poliaData || !poliaData.id || !Array.isArray(poliaData.alinhamentos)) {
+    throw new Error("Erro ao buscar relatório de polia: resposta inválida");
   }
 
-  return data;
+  const normalizedUltrasom: UltrasomRelatorioResponse = {
+    relatorio: {
+      ...poliaData,
+      num_revisao: poliaData.num_revisao,
+      cliente: poliaData.cliente,
+      executor: poliaData.usuario,
+      aprovador: poliaData.aprovador,
+      ultrassom: poliaData.alinhamentos.map((item: any) => ({
+        id: item.id,
+        foto_a: item.foto_a || null,
+        foto_c: item.foto_c || null,
+        foto_painel: item.foto_a || item.foto_epto || null,
+        foto_camera: item.foto_c || item.foto_b || item.foto_d || null,
+        setor: item.equipamento || "-",
+        num_vazamento: String(item.canal_polia ?? "-"),
+        localizacao: item.distancia_cabecotes || "-",
+        componente: item.qtde_correia != null ? `Correias: ${item.qtde_correia}` : "-",
+        valor_medido: item.valor_desalinhamento || "-",
+        diagnostico: item.comentario || "-",
+        recomendacao: item.consideracao_final || "-",
+        status: item.condicao_final || poliaData.status || "Não iniciado",
+      })),
+    },
+  };
+
+  return normalizedUltrasom;
 };
 
 export const useRelatorio = (idRelatorio: string | null) => {

@@ -30,8 +30,8 @@ const Index = () => {
     if (relatorio.ultrassom && !relatorio.vibracoes) {
       relatorio.vibracoes = relatorio.ultrassom.map((item: UltrasomItem) => ({
         id: item.id || 0,
-        foto: item.foto_painel || item.foto1 || item.foto,
-        foto2: item.foto_camera || item.foto2,
+        foto: item.foto_a,
+        foto2: item.foto_c,
       }));
     }
     return relatorio;

@@ -9,27 +9,36 @@
 npm install && npm run build
 ```
 
-#### Start Command (para preview)
+#### Start Command
 ```bash
-npm run preview
+npm run start
 ```
 
 ### Variáveis de Ambiente
 
-**Obrigatória:**
+**Opcional:**
 
-- `VITE_API_URL` - URL base da API para buscar dados dos relatórios
+- `API_TARGET_URL` - URL base real da API que o servidor Node vai acessar
   - Exemplo: `https://ayfkjjdgrbymmlkuzbig.supabase.co/functions/v1`
-  - Padrão (se não configurada): `/api` em desenvolvimento e a URL pública do Supabase em produção
+  - Padrão: URL pública atual do Supabase definida no projeto
+- `VITE_API_URL` - URL base consumida pelo navegador
+  - Recomendado: não definir, para usar `/api`
+  - Use apenas se quiser forçar um endpoint absoluto e ele já estiver liberado por CORS
 
 **Como configurar no Coolify:**
 
 1. Acesse seu projeto no Coolify
 2. Vá em **Environment Variables**
 3. Adicione a variável:
-   - Nome: `VITE_API_URL`
-   - Valor: URL completa da sua API
+  - Nome: `API_TARGET_URL`
+  - Valor: URL completa da sua API
 4. Salve e faça o redeploy
+
+### Como Funciona em Produção
+
+- O frontend passa a consultar `/api/...` no mesmo domínio do site.
+- O servidor Node (`server.mjs`) serve os arquivos de `dist/` e encaminha `/api/*` para o Supabase.
+- Isso evita bloqueio de CORS no navegador quando o app estiver no Coolify.
 
 ### Configurações de Build
 
@@ -94,9 +103,14 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/server.mjs ./
+RUN npm ci --omit=dev
+EXPOSE 4173
+CMD ["npm", "run", "start"]
 ```
 
 ### Verificação Local
@@ -108,7 +122,7 @@ Para testar o build localmente:
 npm run build
 
 # Preview do build
-npm run preview
+npm run start
 ```
 
 ### Performance
