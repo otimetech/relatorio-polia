@@ -694,9 +694,11 @@
 
   /* Cover image: fixed size in print */
   img.cover-image {
-    height: 80mm !important;
-    width: auto !important;
-    max-width: 140mm !important;
+    width: 111.125mm !important;
+    height: 47.625mm !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
   }
 
   /* Header logo: fixed size in print */
