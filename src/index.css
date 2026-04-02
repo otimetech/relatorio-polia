@@ -829,4 +829,12 @@
   .report-page + .report-page {
     margin-top: 40px;
   }
+
+  /* Client logo on cover: larger fixed size in print */
+  img.client-cover-logo {
+    height: 42mm !important;
+    width: auto !important;
+    max-width: 80mm !important;
+    object-fit: contain !important;
+  }
 }

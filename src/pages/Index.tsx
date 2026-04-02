@@ -1,6 +1,7 @@
 import { useParams, useSearchParams } from "react-router-dom";
 import ReportHeader from "@/components/ReportHeader";
 import ReportFooter from "@/components/ReportFooter";
+import ReportCoverImage from "@/components/ReportCoverImage";
 import { useRelatorio, RelatorioResponse } from "@/hooks/useRelatorio";
 import { UltrasomItem } from "@/types/vibracao";
 import desalinhamentoVertical from "@/assets/desalinhamento-vertical.jpg";
@@ -88,6 +89,7 @@ const Index = () => {
   // Usar aprovador do response ou do relatorio
   const aprovadorData = relatorio.aprovador;
   const conjuntoData = relatorio.alinhamentos?.[0];
+  const shouldBreakBeforeFinalConsiderations = Boolean(conjuntoData?.is_tensionamento || conjuntoData?.is_vibracao);
   const desalinhamentoCards = [{
     key: "vertical",
     title: "DESALINHAMENTO DO ÂNGULO VERTICAL",
@@ -136,6 +138,43 @@ const Index = () => {
     const date = parseDate(dateStr);
     return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).replace(/de /g, "");
   };
+
+  const finalConsiderationsContent = <>
+      <h2 className="report-title">CONSIDERAÇÕES FINAIS</h2>
+      
+      <div className="bg-secondary/30 rounded-lg p-6 mb-8">
+        <p className="text-foreground leading-relaxed mb-4">
+          {conjuntoData?.consideracao_final || "-"}
+        </p>
+        <p className="text-primary font-semibold">
+          Muito obrigado pela confiança.
+        </p>
+      </div>
+
+      {executorData && (
+        <div className="mb-8">
+          <p className="mb-4">Atenciosamente,</p>
+          <div className="border-l-4 border-primary pl-4">
+            <p className="font-semibold">{executorData.nome}</p>
+            <p className="text-muted-foreground text-sm">{executorData.departamento}</p>
+            <p className="text-sm mt-2">{executorData.email}</p>
+            {executorData.telefone && <p className="text-sm">Tel.: {executorData.telefone}</p>}
+          </div>
+        </div>
+      )}
+
+      {aprovadorData && (
+        <div className="mb-8">
+          <p className="mb-4">Aprovado por,</p>
+          <div className="border-l-4 border-primary pl-4">
+            <p className="font-semibold">{aprovadorData.nome}</p>
+            <p className="text-muted-foreground text-sm">{aprovadorData.departamento}</p>
+            <p className="text-sm mt-2">{aprovadorData.email}</p>
+            {aprovadorData.telefone && <p className="text-sm">Tel.: {aprovadorData.telefone}</p>}
+          </div>
+        </div>
+      )}
+    </>;
   return <div className="min-h-screen bg-background py-8 px-4 print:p-0 print:bg-white">
       {/* Print Button */}
       <div className="no-print fixed top-4 right-4 z-50">
@@ -158,6 +197,7 @@ const Index = () => {
               <img src="/logo-jundpred.jpg" alt="JundPred - Manutenção Preditiva" className="cover-logo h-8 w-auto" />
               <img src="/logo_brasil.jpg" alt="Logo Brasil" className="cover-logo h-8 w-auto" />
             </div>
+            
 
             <div className="bg-primary text-primary-foreground py-4 px-6 rounded-lg mb-8">
               <h2 className="text-2xl font-bold">RELATÓRIO DE MANUTENÇÃO PREDITIVA</h2>
@@ -165,14 +205,14 @@ const Index = () => {
               <p className="text-sm mt-2 opacity-80">Nº {`${relatorio.id} ${relatorio.num_revisao ?? ""}`.trim()}</p>
             </div>
 
-            <div className="mb-8 flex justify-center items-center">
-              <img src="/alinhamento-cover.jpg" alt="Imagem de Alinhamento a Laser" className="cover-image rounded-lg" style={{ width: "350px", height: "120px", objectFit: "cover" }} />
-            </div>
+            <ReportCoverImage
+              src="/alinhamento-cover.jpg"
+              alt="Imagem de Alinhamento a Laser"
+            />
 
-            {clienteData?.logo && <div className="mb-8">
-              <img src={clienteData.logo} alt={clienteData.nome} className="cover-logo h-20 w-auto mx-auto" />
-            </div>}
+            
 
+            
             {clienteData && <div className="bg-secondary/30 rounded-lg p-4 mb-6 text-center">
                 <h3 className="font-semibold text-primary mb-2">Cliente / Unidade</h3>
                 <p className="font-bold text-lg">{clienteData.nome} - {clienteData.cidade}/{clienteData.estado}</p>
@@ -186,6 +226,10 @@ const Index = () => {
               </div>
               
             </div>
+
+            {clienteData?.logo && <div className="mb-8">
+              <img src={clienteData.logo} alt={clienteData.nome} className="client-cover-logo h-62 w-auto mx-auto object-contain" />
+            </div>}
           </div>
 
           <ReportFooter />
@@ -202,13 +246,10 @@ const Index = () => {
 
           <div className="mb-8">
             <p className="text-sm text-muted-foreground">A/C:</p>
-            <p className="font-semibold">{clienteData?.pessoa_contato || "Departamento de Manutenção"}</p>
-            {clienteData?.departamento_contato && <p className="text-sm text-muted-foreground">{clienteData.departamento_contato}</p>}
-            {clienteData && <div className="mt-2 text-sm">
-                <p className="font-medium">{clienteData.nome}</p>
-                <p className="text-muted-foreground">{clienteData.email}</p>
-                <p className="text-muted-foreground">{clienteData.telefone}</p>
-              </div>}
+            <div className="mt-2 text-sm">
+              <p className="font-medium">{clienteData?.departamento_contato || "Departamento de Manutenção"}</p>
+              <p className="text-muted-foreground">{clienteData?.pessoa_contato || "-"}</p>
+            </div>
           </div>
 
           <div className="mb-8">
@@ -444,44 +485,81 @@ const Index = () => {
         <div className="report-page print-break flex flex-col">
           <div className="flex-1">
             <ReportHeader />
-          
-          <h2 className="report-title">CONSIDERAÇÕES FINAIS</h2>
-          
-          <div className="bg-secondary/30 rounded-lg p-6 mb-8">
-            <p className="text-foreground leading-relaxed mb-4">
-              {conjuntoData?.consideracao_final || "-"}
-            </p>
-            <p className="text-primary font-semibold">
-              Muito obrigado pela confiança.
-            </p>
+
+          <h2 className="report-title">SERVIÇOS ADICIONAIS</h2>
+
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="border border-gray-300 rounded-lg p-4 h-full flex flex-col">
+              <p className="font-semibold">Tensionamento das Correias</p>
+              <p className="text-sm text-muted-foreground mb-4">{conjuntoData?.is_tensionamento ? "Sim" : "Não"}</p>
+
+              {conjuntoData?.is_tensionamento && (
+                <>
+                  <div className="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <p className="vazamento-photo-title">Foto do Tensionamento</p>
+                    <div className="vazamento-photo-body">
+                      {conjuntoData?.foto_tensionamento ? (
+                        <img
+                          src={conjuntoData.foto_tensionamento}
+                          alt="Foto do tensionamento das correias"
+                          className="vazamento-photo"
+                        />
+                      ) : (
+                        <div className="image-placeholder h-full w-full">
+                          <span className="text-xs text-muted-foreground">Sem foto do tensionamento</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-sm leading-relaxed">{conjuntoData?.obs_tensionamento || "-"}</p>
+                </>
+              )}
+            </div>
+
+            <div className="border border-gray-300 rounded-lg p-4 h-full flex flex-col">
+              <p className="font-semibold">Medição de Vibração</p>
+              <p className="text-sm text-muted-foreground mb-4">{conjuntoData?.is_vibracao ? "Sim" : "Não"}</p>
+
+              {conjuntoData?.is_vibracao && (
+                <>
+                  <div className="border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <p className="vazamento-photo-title">Foto da Medição de Vibração</p>
+                    <div className="vazamento-photo-body">
+                      {conjuntoData?.foto_vibracao ? (
+                        <img
+                          src={conjuntoData.foto_vibracao}
+                          alt="Foto da medição de vibração"
+                          className="vazamento-photo"
+                        />
+                      ) : (
+                        <div className="image-placeholder h-full w-full">
+                          <span className="text-xs text-muted-foreground">Sem foto da medição de vibração</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-sm leading-relaxed">{conjuntoData?.obs_vibracao || "-"}</p>
+                </>
+              )}
+            </div>
           </div>
 
-          {executorData && (
-            <div className="mb-8">
-              <p className="mb-4">Atenciosamente,</p>
-              <div className="border-l-4 border-primary pl-4">
-                <p className="font-semibold">{executorData.nome}</p>
-                <p className="text-muted-foreground text-sm">{executorData.departamento}</p>
-                <p className="text-sm mt-2">{executorData.email}</p>
-                {executorData.telefone && <p className="text-sm">Tel.: {executorData.telefone}</p>}
-              </div>
-            </div>
-          )}
-
-          {aprovadorData && (
-            <div className="mb-8">
-              <p className="mb-4">Aprovado por,</p>
-              <div className="border-l-4 border-primary pl-4">
-                <p className="font-semibold">{aprovadorData.nome}</p>
-                <p className="text-muted-foreground text-sm">{aprovadorData.departamento}</p>
-                <p className="text-sm mt-2">{aprovadorData.email}</p>
-                {aprovadorData.telefone && <p className="text-sm">Tel.: {aprovadorData.telefone}</p>}
-              </div>
-            </div>
-          )}
+          {!shouldBreakBeforeFinalConsiderations && finalConsiderationsContent}
           </div>
           <ReportFooter />
         </div>
+
+        {shouldBreakBeforeFinalConsiderations && (
+          <div className="report-page print-break flex flex-col">
+            <div className="flex-1">
+              <ReportHeader />
+              {finalConsiderationsContent}
+            </div>
+            <ReportFooter />
+          </div>
+        )}
 
         {/* Services Page */}
         <div className="report-page flex flex-col">
